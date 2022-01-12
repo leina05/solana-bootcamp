@@ -1,7 +1,7 @@
 #![cfg(feature = "test-bpf")]
 
 use anyhow::anyhow;
-use solana_sdk::transaction::Transaction;
+// use solana_sdk::transaction::Transaction;
 use std::path::{Path, PathBuf};
 
 use assert_matches::*;
@@ -166,7 +166,7 @@ fn test_authorized_echo() -> anyhow::Result<()> {
             ],
             data: EchoInstruction::InitializeAuthorizedEcho {
                 buffer_seed,
-                buffer_size: 19,
+                buffer_size: 24,
             }
             .try_to_vec()?,
         }],
@@ -177,7 +177,6 @@ fn test_authorized_echo() -> anyhow::Result<()> {
     transaction.sign(&[&payer], blockhash);
     rpc_client.send_and_confirm_transaction(&transaction)?;
     let account = rpc_client.get_account(&pda)?;
-    println!("{:?}", account.data);
 
     let blockhash = rpc_client.get_latest_blockhash()?;
     let mut transaction = Transaction::new_signed_with_payer(
@@ -196,7 +195,7 @@ fn test_authorized_echo() -> anyhow::Result<()> {
     transaction.sign(&[&payer], blockhash);
     rpc_client.send_and_confirm_transaction(&transaction)?;
     let buffer = rpc_client.get_account(&pda)?.data;
-    let string = std::str::from_utf8(&buffer[9..19])?;
+    let string = std::str::from_utf8(&buffer[13..23])?;
     assert_matches!(string, "authorized");
     Ok(())
 }

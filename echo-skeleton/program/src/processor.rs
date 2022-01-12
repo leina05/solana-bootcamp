@@ -1,7 +1,7 @@
 // use core::slice::SlicePattern;
 // use std::thread::AccessError;
 
-use borsh::BorshDeserialize;
+use borsh::{BorshDeserialize, BorshSerialize};
 // use num_traits::ToPrimitive;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
@@ -17,6 +17,7 @@ use solana_program::{
 
 use crate::error::EchoError;
 use crate::instruction::EchoInstruction;
+use crate::state::AuthorizedBufferHeader;
 
 pub fn assert_with_msg(statement: bool, err: ProgramError, msg: &str) -> ProgramResult {
     if !statement {
@@ -140,20 +141,26 @@ impl Processor {
                         &[bump_seed],
                     ]],
                 )?;
+
+                // Get authorized_buffer account data
                 let mut authorized_buffer_data = authorized_buffer_info.try_borrow_mut_data()?;
 
+                // Get size of echo_buffer: length_of_account_data - bytes_allocated_for_seeds - bytes_used_for_vec_size
+                let echo_buffer_size = authorized_buffer_data.len() - 9 - 4 as usize;
+
                 // Set first byte of authorized buffer to bump seed
-                // TODO: use struct here
-                // let auth_buffer_header = AuthorizedBufferHeader {
-                //     bump_seed,
-                //     buffer_seed,
-                // };
-                authorized_buffer_data[0] = bump_seed;
-                authorized_buffer_data[1..9].copy_from_slice(&buffer_seed_bytes);
+                let auth_buffer_header = AuthorizedBufferHeader {
+                    bump_seed,
+                    buffer_seed,
+                    echo_buffer: vec![0; echo_buffer_size],
+                };
+                auth_buffer_header.serialize(&mut *authorized_buffer_data)?;
+                // authorized_buffer_data[0] = bump_seed;
+                // authorized_buffer_data[1..9].copy_from_slice(&buffer_seed_bytes);
 
                 Ok(())
             }
-            EchoInstruction::AuthorizedEcho { data: _ } => {
+            EchoInstruction::AuthorizedEcho { data } => {
                 msg!("Instruction: AuthorizedEcho");
                 // TODO: is it secure to not store the authority PK when we create the PDA?
                 // I think so, because using the authority PK as a seed effectively stores the PK in the PDA
@@ -176,19 +183,16 @@ impl Processor {
 
                 // Derive PDA to confirm authority
                 // Get bump_seed and buffer_seed from authorized_buffer data
-                let authorized_buffer_data = authorized_buffer_info.try_borrow_data()?;
-                let bump_seed = authorized_buffer_data[0];
-                let buffer_seed_bytes: [u8; 8] = authorized_buffer_data[1..9].try_into().map_err(
-                    |e: std::array::TryFromSliceError| {
-                        println!("{:?}", e);
-                        ProgramError::Custom(0)
-                    },
-                )?;
+                let mut authorized_buffer_data = authorized_buffer_info.try_borrow_mut_data()?;
+                let mut auth_buffer_header =
+                    AuthorizedBufferHeader::try_from_slice(&authorized_buffer_data)?;
+                // let bump_seed = authorized_buffer_data[0];
+                let buffer_seed_bytes = auth_buffer_header.buffer_seed.to_le_bytes();
                 let seeds = &[
                     b"authority",
                     authority_info.key.as_ref(),
                     &buffer_seed_bytes,
-                    &[bump_seed],
+                    &[auth_buffer_header.bump_seed],
                 ];
                 let authorized_buffer_key = Pubkey::create_program_address(seeds, program_id)?;
 
@@ -199,7 +203,20 @@ impl Processor {
                     "Invalid authorized_buffer address.",
                 )?;
 
-                // TODO: all checks are done, write to the buffer
+                // all checks are done, write to the buffer
+                // let mut buffer_data: Vec<u8> = Vec::new();
+                for i in 0..auth_buffer_header.echo_buffer.len() {
+                    let data_i = i % data.len();
+                    println!(
+                        "authorized_buffer_len: {}\ndata_len: {}\ni: {}\ndata_i: {}",
+                        auth_buffer_header.echo_buffer.len(),
+                        data.len(),
+                        i,
+                        data_i
+                    );
+                    auth_buffer_header.echo_buffer[i] = data[data_i];
+                }
+                auth_buffer_header.serialize(&mut *authorized_buffer_data)?;
 
                 Ok(())
             }

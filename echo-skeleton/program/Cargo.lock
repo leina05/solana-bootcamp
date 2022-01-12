@@ -932,11 +932,14 @@ dependencies = [
 name = "echo"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "assert_matches",
  "borsh",
  "bytemuck",
  "num-derive",
  "num-traits",
+ "solana-client",
+ "solana-logger",
  "solana-program",
  "solana-program-test",
  "solana-sdk",

@@ -26,10 +26,7 @@ pub enum EchoInstruction {
     /// | 0     | ✅       | ❌     | authorized_buffer: PDA of Echo Program that only `authority` can write to |
     /// | 1     | ❌       | ✅     | authority: Pubkey with sole write access to `authorized_buffer`           |
     /// | 2     | ❌       | ❌     | system_program: Used to allocate the buffer                               |
-    InitializeAuthorizedEcho {
-        buffer_seed: u64,
-        buffer_size: usize,
-    },
+    InitializeAuthorizedEcho { buffer_seed: u64, buffer_size: u64 },
     /// The contents of the data vector that is provided to the instruction will be copied into the `authorized_buffer` account
     /// starting from index 9 (will NOT override the bump_seed and buffer_seed).
     ///

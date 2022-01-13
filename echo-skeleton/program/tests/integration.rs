@@ -330,12 +330,11 @@ fn test_vending_machine() -> anyhow::Result<()> {
         blockhash,
     );
     rpc_client.send_and_confirm_transaction(&transaction)?;
-    println!(
-        "{:?}",
-        spl_token::state::Account::unpack(
-            rpc_client.get_account(&user_token_account.pubkey())?.data()
-        )?
-    );
+    let ta_initial_amount = spl_token::state::Account::unpack(
+        rpc_client.get_account(&user_token_account.pubkey())?.data(),
+    )?
+    .amount;
+    // let user_token_account_info = rpc_client.get_account(&user_token_account.pubkey())?.data();
     let vending_machine_buffer = rpc_client.get_account(&pda)?;
     println!("{:?}", vending_machine_buffer.data);
 
@@ -361,12 +360,11 @@ fn test_vending_machine() -> anyhow::Result<()> {
     );
     transaction.sign(&[&payer], blockhash);
     rpc_client.send_and_confirm_transaction(&transaction)?;
-    println!(
-        "{:?}",
-        spl_token::state::Account::unpack(
-            rpc_client.get_account(&user_token_account.pubkey())?.data()
-        )?
-    );
+    let ta_final_amount = spl_token::state::Account::unpack(
+        rpc_client.get_account(&user_token_account.pubkey())?.data(),
+    )?
+    .amount;
+    assert!(ta_final_amount == ta_initial_amount - price);
     let vm_data = rpc_client.get_account(&pda)?.data;
     let vm_buffer = VendingMachineBuffer::try_from_slice(&vm_data)?.data;
     let string = std::str::from_utf8(&vm_buffer)?;

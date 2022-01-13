@@ -1,6 +1,7 @@
 #![cfg(feature = "test-bpf")]
 
 use anyhow::anyhow;
+use echo::state::AuthorizedBufferHeader;
 // use solana_sdk::transaction::Transaction;
 use std::path::{Path, PathBuf};
 
@@ -166,7 +167,7 @@ fn test_authorized_echo() -> anyhow::Result<()> {
             ],
             data: EchoInstruction::InitializeAuthorizedEcho {
                 buffer_seed,
-                buffer_size: 24,
+                buffer_size: 13 + data.len() as u64,
             }
             .try_to_vec()?,
         }],
@@ -194,8 +195,9 @@ fn test_authorized_echo() -> anyhow::Result<()> {
     );
     transaction.sign(&[&payer], blockhash);
     rpc_client.send_and_confirm_transaction(&transaction)?;
-    let buffer = rpc_client.get_account(&pda)?.data;
-    let string = std::str::from_utf8(&buffer[13..23])?;
+    let echo_data = rpc_client.get_account(&pda)?.data;
+    let echo_buffer = AuthorizedBufferHeader::try_from_slice(&echo_data)?.echo_buffer;
+    let string = std::str::from_utf8(&echo_buffer)?;
     assert_matches!(string, "authorized");
     Ok(())
 }

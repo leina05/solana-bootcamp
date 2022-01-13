@@ -54,6 +54,14 @@ pub fn assert_is_system_program(account_info: &AccountInfo) -> ProgramResult {
     )
 }
 
+pub fn assert_is_initialized(account_info: &AccountInfo) -> ProgramResult {
+    assert_with_msg(
+        **account_info.lamports.borrow() > 0,
+        ProgramError::UninitializedAccount,
+        &format!("Account {} is uninitialized.", account_info.key),
+    )
+}
+
 pub struct Processor {}
 
 impl Processor {
@@ -74,7 +82,8 @@ impl Processor {
 
                 // Validate accounts input
                 // TODO: handle this with a real error
-                assert!(echo_buffer_info.is_writable);
+                assert_is_writable(echo_buffer_info)?;
+                assert_is_initialized(echo_buffer_info)?;
 
                 // Write the data to the buffer
                 let mut echo_buffer_data = echo_buffer_info.data.borrow_mut();

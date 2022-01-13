@@ -1,5 +1,4 @@
-#![cfg(feature = "test-bpf")]
-
+// #![cfg(feature = "test-bpf")]
 use anyhow::anyhow;
 use echo::state::{AuthorizedBuffer, VendingMachineBuffer};
 // use solana_sdk::transaction::Transaction;
@@ -7,6 +6,7 @@ use std::path::{Path, PathBuf};
 
 use assert_matches::*;
 use borsh::{BorshDeserialize, BorshSerialize};
+use solana_client::client_error::{ClientError, ClientErrorKind};
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::account::ReadableAccount;
 use solana_sdk::instruction::AccountMeta;
@@ -78,6 +78,49 @@ fn test_echo() -> anyhow::Result<()> {
     let string = std::str::from_utf8(&buffer)?;
     println!("{:?}", string);
     assert_matches!(string, "echo");
+    Ok(())
+}
+
+#[test]
+fn test_echo_uninitialized() -> anyhow::Result<()> {
+    solana_logger::setup_with_default("solana_program_runtime=debug");
+    let program_id = Pubkey::new_unique();
+    let echo_buffer = Keypair::new();
+
+    // Set up the test validator
+    let (test_validator, payer) = TestValidatorGenesis::default()
+        .add_program("echo", program_id)
+        .start();
+    let rpc_client = test_validator.get_rpc_client();
+
+    // let rpc_client = RpcClient::new_with_commitment("https://api.devnet.solana.com".to_string(), CommitmentLevel::confirmed());
+
+    let blockhash = rpc_client.get_latest_blockhash().unwrap();
+
+    // Create transaction
+    let data: Vec<u8> = b"echo".to_vec();
+    let mut transaction = Transaction::new_signed_with_payer(
+        &[
+            // Instruction to write to buffer
+            Instruction {
+                program_id,
+                accounts: vec![AccountMeta::new(echo_buffer.pubkey(), false)],
+                data: EchoInstruction::Echo { data }.try_to_vec()?,
+            },
+        ],
+        Some(&payer.pubkey()),
+        &vec![&payer],
+        blockhash,
+    );
+
+    // Sign and send transaction
+    transaction.sign(&[&payer], blockhash);
+    let e = rpc_client
+        .send_and_confirm_transaction(&transaction)
+        .unwrap_err();
+    println!("{:?}", e);
+    assert_matches!(e, ClientError { .. });
+
     Ok(())
 }
 

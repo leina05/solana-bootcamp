@@ -24,23 +24,23 @@ impl Processor {
             .map_err(|_| ProgramError::InvalidInstructionData)?;
 
         match instruction {
-            ExchangeBoothInstruction::InititializeExchangeBooth { } => {
+            ExchangeBoothInstruction::InititializeExchangeBooth {} => {
                 msg!("Instruction: InitializeExchangeBooth");
                 initialize_exchange_booth::process(program_id, accounts)?;
             }
-            ExchangeBoothInstruction::Deposit { } => {
+            ExchangeBoothInstruction::Deposit {} => {
                 msg!("Instruction: Deposit");
                 deposit::process(program_id, accounts)?;
             }
-            ExchangeBoothInstruction::Withdraw { } => {
+            ExchangeBoothInstruction::Withdraw {} => {
                 msg!("Instruction: Withdraw");
                 withdraw::process(program_id, accounts)?;
             }
-            ExchangeBoothInstruction::Exchange { } => {
+            ExchangeBoothInstruction::Exchange {} => {
                 msg!("Instruction: Withdraw");
                 exchange::process(program_id, accounts)?;
             }
-            ExchangeBoothInstruction::CloseExchangeBooth { } => {
+            ExchangeBoothInstruction::CloseExchangeBooth {} => {
                 msg!("Instruction: CloseExchangeBooth");
                 close_exchange_booth::process(program_id, accounts)?;
             }

@@ -4,5 +4,11 @@ use std::mem::size_of;
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
 pub struct ExchangeBooth {
-    // TODO
+    admin: Pubkey,
+    mint_base: Pubkey,
+    decimal_base: u8,
+    mint_quote: Pubkey,
+    decimal_quote: u8,
+    oracle: Pubkey,
+    fee: u64, // Fee in bps
 }

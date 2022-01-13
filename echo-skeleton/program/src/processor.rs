@@ -28,6 +28,30 @@ pub fn assert_with_msg(statement: bool, err: ProgramError, msg: &str) -> Program
     }
 }
 
+pub fn assert_is_signer(account_info: &AccountInfo) -> ProgramResult {
+    assert_with_msg(
+        account_info.is_signer,
+        ProgramError::MissingRequiredSignature,
+        &format!("Missing signature for account {}.", account_info.key),
+    )
+}
+
+pub fn assert_is_writable(account_info: &AccountInfo) -> ProgramResult {
+    assert_with_msg(
+        account_info.is_writable,
+        ProgramError::InvalidArgument,
+        &format!("Account {} must be writable.", account_info.key),
+    )
+}
+
+pub fn assert_is_system_program(account_info: &AccountInfo) -> ProgramResult {
+    assert_with_msg(
+        *account_info.key == SYSTEM_PROGRAM_ID,
+        ProgramError::InvalidArgument,
+        &format!("Expected System Program, received: {}", account_info.key),
+    )
+}
+
 pub struct Processor {}
 
 impl Processor {
@@ -77,24 +101,9 @@ impl Processor {
                 let system_program_info = next_account_info(accounts_iter)?;
 
                 // Validate account inputs
-                assert_with_msg(
-                    authorized_buffer_info.is_writable,
-                    ProgramError::InvalidArgument,
-                    "Authorized buffer account must be writable.",
-                )?;
-                assert_with_msg(
-                    authority_info.is_signer,
-                    ProgramError::MissingRequiredSignature,
-                    "Missing authority signature.",
-                )?;
-                assert_with_msg(
-                    *system_program_info.key == SYSTEM_PROGRAM_ID,
-                    ProgramError::InvalidArgument,
-                    &format!(
-                        "Expected System Program, received: {}",
-                        system_program_info.key
-                    ),
-                )?;
+                assert_is_writable(authorized_buffer_info)?;
+                assert_is_signer(authority_info)?;
+                assert_is_system_program(system_program_info)?;
 
                 // Find PDA address for authorized_buffer
                 let mut seeds: Vec<&[u8]> = vec![

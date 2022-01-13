@@ -1,7 +1,7 @@
 #![cfg(feature = "test-bpf")]
 
 use anyhow::anyhow;
-use echo::state::AuthorizedBufferHeader;
+use echo::state::{AuthorizedBuffer, VendingMachineBuffer};
 // use solana_sdk::transaction::Transaction;
 use std::path::{Path, PathBuf};
 
@@ -196,7 +196,7 @@ fn test_authorized_echo() -> anyhow::Result<()> {
     transaction.sign(&[&payer], blockhash);
     rpc_client.send_and_confirm_transaction(&transaction)?;
     let echo_data = rpc_client.get_account(&pda)?.data;
-    let echo_buffer = AuthorizedBufferHeader::try_from_slice(&echo_data)?.echo_buffer;
+    let echo_buffer = AuthorizedBuffer::try_from_slice(&echo_data)?.data;
     let string = std::str::from_utf8(&echo_buffer)?;
     assert_matches!(string, "authorized");
     Ok(())
@@ -273,7 +273,7 @@ fn test_vending_machine() -> anyhow::Result<()> {
                 ],
                 data: EchoInstruction::InitializeVendingMachineEcho {
                     price,
-                    buffer_size: 24,
+                    buffer_size: b"vending_machine".len() + 4 + 9,
                 }
                 .try_to_vec()?,
             },
@@ -324,8 +324,9 @@ fn test_vending_machine() -> anyhow::Result<()> {
             rpc_client.get_account(&user_token_account.pubkey())?.data()
         )?
     );
-    let buffer = rpc_client.get_account(&pda)?.data;
-    let string = std::str::from_utf8(&buffer[9..24])?;
+    let vm_data = rpc_client.get_account(&pda)?.data;
+    let vm_buffer = VendingMachineBuffer::try_from_slice(&vm_data)?.data;
+    let string = std::str::from_utf8(&vm_buffer)?;
     assert_matches!(string, "vending machine");
 
     Ok(())

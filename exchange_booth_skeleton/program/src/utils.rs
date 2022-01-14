@@ -1,8 +1,8 @@
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
-    ID as SYSTEM_PROGRAM_ID,
+    system_program,
 };
-use spl_token::ID as TOKEN_PROGRAM_ID;
+use spl_token;
 
 pub fn assert_with_msg(statement: bool, err: ProgramError, msg: &str) -> ProgramResult {
     if !statement {
@@ -31,7 +31,7 @@ pub fn assert_is_writable(account_info: &AccountInfo) -> ProgramResult {
 
 pub fn assert_is_system_program(account_info: &AccountInfo) -> ProgramResult {
     assert_with_msg(
-        *account_info.key == SYSTEM_PROGRAM_ID,
+        *account_info.key == system_program::id(),
         ProgramError::InvalidArgument,
         &format!("Expected System Program, received: {}", account_info.key),
     )
@@ -39,7 +39,7 @@ pub fn assert_is_system_program(account_info: &AccountInfo) -> ProgramResult {
 
 pub fn assert_is_token_program(account_info: &AccountInfo) -> ProgramResult {
     assert_with_msg(
-        *account_info.key == TOKEN_PROGRAM_ID,
+        *account_info.key == spl_token::id(),
         ProgramError::InvalidArgument,
         &format!("Expected Token Program, received: {}", account_info.key),
     )

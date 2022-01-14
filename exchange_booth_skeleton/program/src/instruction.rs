@@ -14,10 +14,15 @@ pub enum ExchangeBoothInstruction {
     ///   3. `[]` Oracle program account.
     ///   4. `[]` Token Program.
     ///   5. `[]` System Program.
-    ///   6. `[]` Vault token account of the base currency (PDA).
-    ///   7. `[]` Vault token account of the quote currency (PDA).
-    ///   8. `[]` EB state account (PDA).
-    InititializeExchangeBooth,
+    ///   6. `[]` Rent Sysvar.
+    ///   7. `[]` EB state account (PDA).
+    ///   8. `[]` Vault token account of the base currency (PDA).
+    ///   9. `[]` Vault token account of the quote currency (PDA).
+    InititializeExchangeBooth {
+        vault_base_bump: u8,
+        vault_quote_bump: u8,
+        state_bump: u8,
+    },
     /// Transfers tokens from an admin-owned token account to an EB vault.
     ///
     ///   0. `[signer]` EB admin account.

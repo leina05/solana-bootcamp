@@ -24,9 +24,19 @@ impl Processor {
             .map_err(|_| ProgramError::InvalidInstructionData)?;
 
         match instruction {
-            ExchangeBoothInstruction::InititializeExchangeBooth {} => {
+            ExchangeBoothInstruction::InititializeExchangeBooth {
+                vault_base_bump,
+                vault_quote_bump,
+                state_bump,
+            } => {
                 msg!("Instruction: InitializeExchangeBooth");
-                initialize_exchange_booth::process(program_id, accounts)?;
+                initialize_exchange_booth::process(
+                    program_id,
+                    accounts,
+                    state_bump,
+                    vault_base_bump,
+                    vault_quote_bump,
+                )?;
             }
             ExchangeBoothInstruction::Deposit { mint, amount } => {
                 msg!("Instruction: Deposit");

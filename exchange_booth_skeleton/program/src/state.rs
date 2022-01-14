@@ -1,14 +1,19 @@
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::pubkey::Pubkey;
-use std::mem::size_of;
+use solana_program::{program_error::ProgramError, pubkey::Pubkey};
 
-#[derive(BorshSerialize, BorshDeserialize, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Debug, Default, Clone)]
 pub struct ExchangeBooth {
-    admin: Pubkey,
-    mint_base: Pubkey,
-    decimal_base: u8,
-    mint_quote: Pubkey,
-    decimal_quote: u8,
-    oracle: Pubkey,
-    fee: u64, // Fee in bps
+    pub admin: Pubkey,
+    pub mint_base: Pubkey,
+    pub decimals_base: u8,
+    pub mint_quote: Pubkey,
+    pub decimals_quote: u8,
+    pub oracle: Pubkey,
+    pub fee: u64, // Fee in bps
+}
+
+impl ExchangeBooth {
+    pub fn get_serialized_size() -> Result<usize, ProgramError> {
+        Ok(Self::default().try_to_vec()?.len())
+    }
 }

@@ -1,7 +1,7 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{program_error::ProgramError, pubkey::Pubkey};
 
-#[derive(BorshSerialize, BorshDeserialize, Debug, Default, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Debug, Default, Clone, Eq, PartialEq)]
 pub struct ExchangeBooth {
     pub admin: Pubkey,
     pub mint_base: Pubkey,

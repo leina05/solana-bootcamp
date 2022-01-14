@@ -19,9 +19,9 @@ pub enum ExchangeBoothInstruction {
     ///   8. `[]` Vault token account of the base currency (PDA).
     ///   9. `[]` Vault token account of the quote currency (PDA).
     InititializeExchangeBooth {
+        state_bump: u8,
         vault_base_bump: u8,
         vault_quote_bump: u8,
-        state_bump: u8,
     },
     /// Transfers tokens from an admin-owned token account to an EB vault.
     ///

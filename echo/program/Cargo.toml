@@ -27,6 +27,7 @@ solana-validator = "=1.9.1"
 solana-logger = "1.9"
 solana-client = "1.9"
 anyhow = "1.0"
+exchange_booth = { path = "../../exchange_booth/program" }
 
 [lib]
 crate-type = ["cdylib", "lib"]

@@ -18,16 +18,19 @@ use {
     spl_token::state::Mint,
 };
 
-use exchangebooth::{instruction::ExchangeBoothInstruction, state::ExchangeBooth};
+use echo::instruction::EchoInstruction;
+use exchange_booth::{instruction::ExchangeBoothInstruction, state::ExchangeBooth};
 
 #[test]
 fn test_validator_transaction() -> anyhow::Result<()> {
     // Set up test validator
     solana_logger::setup_with_default("solana_program_runtime=debug");
     let eb_program_id = Pubkey::new_unique();
+    let echo_program_id = Pubkey::new_unique();
 
     let (test_validator, admin) = TestValidatorGenesis::default()
-        .add_program("exchangebooth", eb_program_id)
+        .add_program("exchange_booth", eb_program_id)
+        .add_program("echo", echo_program_id)
         .start();
     let rpc_client = test_validator.get_rpc_client();
 
@@ -38,9 +41,25 @@ fn test_validator_transaction() -> anyhow::Result<()> {
     let mint_quote = Keypair::new();
 
     // TODO: add oracle program to test validator
-    let oracle_pk = Pubkey::new_unique();
+    let oracle_pk = echo_program_id.clone();
+    let admin_pk = admin.pubkey();
+    let mint_quote_pk = mint_quote.pubkey();
+    let mint_base_pk = mint_base.pubkey();
 
-    println!()
+    println!(
+        "Accounts: 
+        admin_pk: {}
+        oracle_pk: {}
+        mint_base_pk: {}
+        mint_quote_pk: {}
+        spl_token_account: {}
+        ",
+        admin_pk,
+        oracle_pk,
+        mint_base_pk,
+        mint_quote_pk,
+        spl_token::id()
+    );
 
     // Create instructions
     let mint_account_size = Mint::get_packed_len();
@@ -79,15 +98,12 @@ fn test_validator_transaction() -> anyhow::Result<()> {
 
     // Create InitializeExchangeBooth Instruction
     // Find PDA addresses
-    let admin_pk = admin.pubkey();
-    let mint_quote_pk = mint_quote.pubkey();
-    let mint_base_pk = mint_base.pubkey();
     let state_seeds = &[
         b"state_info",
         admin_pk.as_ref(),
         mint_base_pk.as_ref(),
         mint_quote_pk.as_ref(),
-        // oracle_pk.as_ref(),
+        oracle_pk.as_ref(),
     ];
     let (state_pk, state_bump) = Pubkey::find_program_address(state_seeds, &eb_program_id);
     let vault_base_seeds = &[b"vault_base", state_pk.as_ref(), mint_base_pk.as_ref()];
@@ -134,7 +150,7 @@ fn test_validator_transaction() -> anyhow::Result<()> {
         create_mint_quote_ix,
         initialize_mint_base_ix,
         initialize_mint_quote_ix,
-        // initialize_eb_ix,
+        initialize_eb_ix,
     ];
     let signers = [&admin, &mint_base, &mint_quote];
     let mut transaction = Transaction::new_signed_with_payer(
@@ -149,9 +165,22 @@ fn test_validator_transaction() -> anyhow::Result<()> {
     rpc_client.send_and_confirm_transaction(&transaction)?;
 
     // Confirm ExchangeBooth state has been saved
+    /*
     let eb_state_data = rpc_client.get_account_data(&state_pk)?;
     let eb_state_struct = ExchangeBooth::try_from_slice(eb_state_data.as_ref())?;
-    assert!(eb_state_struct.)
+    assert_eq!(
+        eb_state_struct,
+        ExchangeBooth {
+            admin: admin_pk,
+            mint_base: mint_base_pk,
+            decimals_base: 0,
+            mint_quote: mint_quote_pk,
+            decimals_quote: 0,
+            oracle: oracle_pk,
+            fee: 0,
+        }
+    );
+    */
 
     Ok(())
 }

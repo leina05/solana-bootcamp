@@ -25,9 +25,9 @@ impl Processor {
 
         match instruction {
             ExchangeBoothInstruction::InititializeExchangeBooth {
+                state_bump,
                 vault_base_bump,
                 vault_quote_bump,
-                state_bump,
             } => {
                 msg!("Instruction: InitializeExchangeBooth");
                 initialize_exchange_booth::process(

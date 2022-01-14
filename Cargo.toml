@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "echo/program",
+    "exchange_booth/program"
+]

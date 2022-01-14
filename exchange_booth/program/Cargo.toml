@@ -1,7 +1,8 @@
 cargo-features = ["edition2021"]
 
+
 [package]
-name = "exchangebooth"
+name = "exchange_booth"
 version = "0.1.0"
 edition = "2021"
 license = "WTFPL"
@@ -27,6 +28,7 @@ solana-validator = "=1.9.1"
 solana-logger = "1.9"
 solana-client = "1.9"
 anyhow = "1.0"
+echo = { path = "../../echo/program" }
 
 [lib]
 crate-type = ["cdylib", "lib"]
